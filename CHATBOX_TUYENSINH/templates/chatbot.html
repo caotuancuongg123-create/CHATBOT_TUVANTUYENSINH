@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEU Chatbot</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.app {
+    width: 100%;
+    max-width: 720px;
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 22px;
+    overflow: hidden;
+
+    box-shadow: 0 25px 70px rgba(0,0,0,0.4);
+}
+.header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+
+    background: linear-gradient(90deg, #6366f1, #3b82f6, #06b6d4);
+    color: white;
+}
+
+.logo-img {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.header p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+#chat-box {
+    flex: 1;
+    padding: 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #f1f5f9;
+}
+
+.msg {
+    max-width: 75%;
+    padding: 12px 14px;
+    border-radius: 16px;
+    font-size: 15px;
+    line-height: 1.4;
+    animation: fadeInUp 0.25s ease;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.user {
+    background: #3b82f6;
+    color: white;
+    align-self: flex-end;
+}
+
+.bot {
+    background: white;
+    border: 1px solid #e5e7eb;
+    align-self: flex-start;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+    padding: 14px;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+}
+
+input {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #f3f4f6;
+    outline: none;
+}
+
+button {
+    padding: 14px 18px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #3b82f6);
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.typing {
+    display: inline-block;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: #e5e7eb;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <div class="header">
+        <img src="{{ url_for('static', filename='neu_logo.jpg') }}" class="logo-img">
+        <div>
+            <h1>NEU Chatbot</h1>
+            <p>Tư vấn tuyển sinh 2026</p>
+        </div>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <div class="input-area">
+        <input id="input" placeholder="Nhập câu hỏi...">
+        <button onclick="send()">Gửi</button>
+    </div>
+
+</div>
+
+<script>
+function addMessage(text, type) {
+    const msg = document.createElement("div");
+    msg.classList.add("msg", type);
+    msg.textContent = text;
+
+    document.getElementById("chat-box").appendChild(msg);
+    scrollDown();
+}
+
+function scrollDown() {
+    const box = document.getElementById("chat-box");
+    box.scrollTop = box.scrollHeight;
+}
+
+function send() {
+    const inputBox = document.getElementById("input");
+    const input = inputBox.value.trim();
+
+    if (!input) return;
+
+    addMessage(input, "user");
+    inputBox.value = "";
+
+    fetch("/chat", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: input })
+    })
+    .then(res => res.json())
+    .then(data => {
+        addMessage(data.response, "bot");
+    })
+    .catch(() => {
+        addMessage("❌ Lỗi server", "bot");
+    });
+}
+
+document.getElementById("input").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") send();
+});
+
+window.onload = function() {
+    setTimeout(() => {
+        addMessage("👋 Xin chào! Mình là chatbot tư vấn tuyển sinh NEU. Bạn cần hỏi gì cứ nhắn nhé!", "bot");
+    }, 500);
+};
+</script>
+
+</body>
+</html>
