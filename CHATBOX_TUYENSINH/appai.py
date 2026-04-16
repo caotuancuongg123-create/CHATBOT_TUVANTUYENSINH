@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from openai import OpenAI
+import re
+import unicodedata
 
 app = Flask(__name__)
 
@@ -9,6 +11,40 @@ client = OpenAI(
     base_url="https://router.huggingface.co/v1",
     api_key=HF_TOKEN,
 )
+
+def normalize_text(text):
+    text = text.lower().strip()
+
+    text = unicodedata.normalize('NFD', text)
+    text = ''.join(c for c in text if unicodedata.category(c) != 'Mn')
+
+    text = re.sub(r'[^a-z0-9\s]', '', text)
+
+    return text
+
+abbreviations = {
+    "neu": "dai hoc kinh te quoc dan",
+    "ktqd": "dai hoc kinh te quoc dan",
+    "dh": "dai hoc",
+
+    "xt": "xet tuyen",
+    "pt": "phuong thuc",
+    "ptxt": "phuong thuc xet tuyen",
+
+    "clc": "chat luong cao",
+    "tt": "tien tien",
+
+    "ts": "tuyen sinh",
+    "nv": "nguyen vong",
+
+    "hp": "hoc phi",
+    "hb": "hoc bong",
+
+    "ko": "khong",
+    "k": "khong",
+    "dc": "duoc",
+    "bn": "bao nhieu"
+}
 
 qa_data = {
     "thong_tin": {
@@ -53,11 +89,14 @@ def home():
     return render_template("chatbot.html")
 
 def check_static_answer(user_input):
-    user_input = user_input.lower()
+    user_input = normalize_text(user_input)
+    user_input = expand_abbreviations(user_input)
 
     for item in qa_data.values():
         for keyword in item["keywords"]:
-            if keyword in user_input:
+            keyword_norm = normalize_text(keyword)
+
+            if keyword_norm in user_input:
                 return item["answer"]
 
     return None
@@ -102,6 +141,20 @@ def chat():
     except Exception as e:
         print("SERVER ERROR:", e)
         return jsonify({"response": "Server lỗi"})
+
+def expand_abbreviations(text):
+    words = text.split()
+    new_words = []
+
+    for word in words:
+        if word in abbreviations:
+            new_words.append(abbreviations[word])
+        else:
+            new_words.append(word)
+
+    return " ".join(new_words)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
