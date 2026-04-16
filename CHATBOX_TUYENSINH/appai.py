@@ -82,7 +82,7 @@ def call_glm(user_input):
 
     except Exception as e:
         print("AI ERROR:", e)
-        return "❌ Lỗi AI"
+        return "Lỗi AI"
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -90,7 +90,7 @@ def chat():
         user_input = request.json.get("message", "")
 
         if not user_input:
-            return jsonify({"response": "❌ Bạn chưa nhập câu hỏi"})
+            return jsonify({"response": "Bạn chưa nhập câu hỏi"})
 
         static_answer = check_static_answer(user_input)
         if static_answer:
@@ -101,7 +101,7 @@ def chat():
 
     except Exception as e:
         print("SERVER ERROR:", e)
-        return jsonify({"response": "❌ Server lỗi"})
+        return jsonify({"response": "Server lỗi"})
 
 if __name__ == "__main__":
     app.run(debug=True)
